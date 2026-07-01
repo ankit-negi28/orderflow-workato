@@ -1,0 +1,11 @@
+order_id,customer_name,customer_email,product_code,quantity,unit_price
+ORD-2001,Priya Kapoor,priya.kapoor@company.com,SKU-101,5,299.99
+ORD-2002,Amit Verma,amit.verma@company.com,SKU-202,2,499.50
+ORD-2003,Sana Khan,sana.khan@company.com,SKU-303,0,199.00
+ORD-2004,Rohit Mehta,rohit.mehta@company.com,SKU-101,3,299.99
+ORD-2001,Priya Kapoor,priya.kapoor@company.com,SKU-101,5,299.99
+ORD-2005,Kavya Singh,kavya.singh@company.com,SKU-404,1,999.00
+ORD-2006,Invalid User,not-a-valid-email,SKU-505,2,149.00
+ORD-2007,Neha Sharma,neha.sharma@company.com,SKU-202,4,499.50
+ORD-2008,Arjun Patel,arjun.patel@company.com,SKU-303,1,199.00
+ORD-2009,Riya Joshi,riya.joshi@company.com,SKU-101,2,299.99

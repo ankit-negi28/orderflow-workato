@@ -1,0 +1,9 @@
+order_id,customer_name,customer_email,product_code,quantity,unit_price
+ORD-3001,Vikram Singh,vikram.singh@company.com,SKU-201,3,450.00
+ORD-3002,Meera Patel,meera.patel@company.com,SKU-302,1,1299.99
+ORD-3003,Aryan Sharma,aryan.sharma@company.com,SKU-101,5,299.99
+ORD-3004,Deepa Nair,deepa.nair@company.com,SKU-404,2,750.00
+ORD-3005,Karan Malhotra,karan.malhotra@company.com,SKU-505,4,199.50
+ORD-3006,Pooja Iyer,pooja.iyer@company.com,SKU-202,2,499.50
+ORD-3007,Rahul Gupta,rahul.gupta@company.com,SKU-303,6,149.99
+ORD-3008,Ananya Roy,ananya.roy@company.com,SKU-101,1,299.99
