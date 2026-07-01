@@ -9,6 +9,18 @@
 ## Overview
 OrderFlow is an enterprise supply chain order processing pipeline built on Workato. It automates the complete order ingestion lifecycle — from CSV file detection in AWS S3 to row-level validation, duplicate detection, data transformation, MySQL persistence, real-time notifications, and file archival — with partial success processing, dead letter queue logging, and execution observability.
 
+## Project at a Glance
+
+| | |
+|---|---|
+| **Business Domain** | Supply Chain |
+| **Integration Style** | File-Based Event-Driven Integration |
+| **Trigger** | AWS S3 — new CSV file event |
+| **Orchestration** | Workato |
+| **Persistence** | MySQL 8.4 (Aiven Cloud) |
+| **Architecture Style** | Event-Driven, Modular |
+| **Key Patterns** | Dead Letter Queue · Idempotency · Partial Success · Audit Trail · Observability · Callable Recipe |
+
 ## Business Problem
 Supplier orders commonly arrive as CSV files via file transfer systems (S3, SFTP, FTP). Manual processing causes:
 - Delayed order entry and fulfillment
@@ -61,6 +73,7 @@ OrderFlow automates the complete order ingestion pipeline — validating, transf
 |---|---|
 | Workato | iPaaS orchestration platform |
 | AWS S3 | Event-driven file trigger + file lifecycle management |
+| AWS IAM | Least-privilege access control for Workato S3 connection |
 | MySQL (Aiven Cloud) | Order persistence, audit trail, dead letter queue, execution metrics — cloud-hosted managed MySQL, production-equivalent setup |
 | Gmail | Processing summary + failure alerts |
 | Slack | Real-time pipeline alerts to #orderflow-alerts |
@@ -140,7 +153,7 @@ Per-file processing summary for operational observability.
 
 ## Key Features
 - ✅ Event-driven S3 trigger — pipeline fires automatically on new CSV upload
-- ✅ Row-level validation (Order ID format, email regex, quantity, unit price)
+- ✅ Business Validation Layer — row-level validation (Order ID format, email regex, quantity > 0, unit price > 0)
 - ✅ Partial success processing — valid rows processed even when others fail
 - ✅ Dead letter queue — all rejected rows logged with specific failure reasons and row numbers
 - ✅ Idempotency — duplicate order_id detection prevents double processing on resubmission
@@ -193,6 +206,23 @@ Following Single Responsibility Principle — Recipe 01 handles orchestration, R
 - **Callable Recipe Pattern** — reusable notification handler across pipeline
 - **Least-privilege security** — IAM policy scoped to minimum required S3 permissions
 
+## Repository Structure
+
+```
+orderflow-workato/
+├── README.md
+├── screenshots/
+│   ├── happy-path/          ← Clean file processing screenshots
+│   ├── partial-failure/     ← Validation error and failure screenshots
+│   ├── database/            ← MySQL table screenshots from DBeaver
+│   └── architecture/        ← Recipe build views and architecture diagram
+├── sample-files/
+│   ├── orders_batch_001.csv           ← File with intentional errors
+│   └── orders_batch_clean_001.csv     ← Clean file, all valid orders
+└── sql/
+    └── schema.sql           ← Complete MySQL schema for all 4 tables
+```
+
 ## Screenshots
 
 ### Happy Path — Clean File Processing
@@ -223,7 +253,7 @@ Following Single Responsibility Principle — Recipe 01 handles orchestration, R
 
 ### Database — MySQL Tables
 ![Orders Table](screenshots/database/orders-table.png)
-*orders table showing successfully processed orders with computed total_value and RECEIVED status*
+*orders table — 7 valid orders processed with computed total_value and RECEIVED status*
 
 ![Failed Orders Table](screenshots/database/failed-orders-table.png)
 *failed_orders table showing rejected rows with failure_type, failure_reason, and row_number*
@@ -299,6 +329,12 @@ CSV batch size is configurable (default 1000 rows per batch). For high-volume sc
 
 ## SQL Schema
 See [sql/schema.sql](sql/schema.sql) for complete database schema with all four tables.
+
+### Cloud Database
+MySQL is hosted on Aiven Cloud free tier for this implementation. 
+In production, this would be replaced with AWS RDS MySQL or equivalent 
+managed database service within the same cloud region as the S3 bucket 
+to minimise latency.
 
 ## Sample Files
 See [sample-files/](sample-files/) folder for test CSV files used during development and testing.
