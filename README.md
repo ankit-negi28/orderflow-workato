@@ -29,72 +29,27 @@ persisting, and notifying in seconds rather than hours.
 ![Architecture Diagram](screenshots/architecture/architecture-diagram.png)
 
 ## Workflow
-Supplier drops CSV file
-│
-▼
-AWS S3 — incoming/ folder
-│
-▼
-Workato detects new CSV file (event-driven trigger)
-│
-▼
-Initialize execution counters
-(total_rows, processed_count, failed_count, duplicate_count)
-│
-▼
-FOR EACH row in CSV
-│
-├── VALIDATION LAYER
-│   ├── Order ID format (must match ORD-XXXX)
-│   ├── Email format (regex validation)
-│   ├── Quantity > 0
-│   └── Unit price > 0
-│         │
-│    ┌────┴────┐
-│  FAIL       PASS
-│    │           │
-│    ▼           ▼
-│  Dead       DUPLICATE CHECK
-│  Letter     (MySQL SELECT on order_id)
-│  Queue           │
-│  +          ┌────┴────┐
-│  increment  DUP      NEW
-│  failed_    │           │
-│  count      ▼           ▼
-│           Dead      DATA TRANSFORMATION
-│           Letter    ├── calculated_order_total
-│           Queue     ├── normalized_customer_name
-│           +         └── normalized_product_code
-│           increment      │
-│           duplicate_     ▼
-│           count     INSERT TO orders TABLE
-│                          │
-│                          ▼
-│                    INSERT TO order_events TABLE
-│                    (event_type: ORDER_RECEIVED)
-│                          │
-│                          ▼
-│                    increment processed_count
-│
-▼
-UPDATE total_rows
-│
-▼
-INSERT TO execution_metrics TABLE
-│
-▼
-CALL Recipe 02 — Notification Handler
-├── Gmail processing summary
-├── Slack alert
-└── IF failures > 0 → additional Gmail + Slack failure alert
-│
-▼
-ARCHIVE FILE
-├── failures > 0 → failed/filename_partial.csv
-└── no failures → processed/filename_processed.csv
-│
-▼
-DELETE from incoming/
+
+### Onboarding Flow
+1. Supplier drops CSV file into AWS S3 `incoming/` folder
+2. Workato detects new file via event-driven S3 trigger
+3. Pipeline initializes execution counters (total, processed, failed, duplicates)
+4. For each row in CSV:
+   - **Validation** — checks Order ID format, email format, quantity > 0, unit price > 0
+   - If validation fails → row logged to `failed_orders` table (Dead Letter Queue)
+   - If validation passes → **Duplicate check** via MySQL SELECT on order_id
+   - If duplicate found → row logged to `failed_orders` table
+   - If new order → **Data transformation** (normalize name, uppercase product code, calculate total)
+   - Insert to `orders` table
+   - Insert to `order_events` table (ORDER_RECEIVED event)
+   - Increment processed counter
+5. Update total_rows counter
+6. Insert execution summary to `execution_metrics` table
+7. Call Recipe 02 — Notification Handler (Gmail + Slack)
+8. Archive file:
+   - Failures detected → move to `failed/filename_partial.csv`
+   - No failures → move to `processed/filename_processed.csv`
+9. Delete original file from `incoming/` folder
 
 ## Recipes
 | Recipe | Description |
@@ -114,10 +69,16 @@ DELETE from incoming/
 | DBeaver | MySQL database management |
 
 ## AWS S3 Structure
-orderflow-pipeline/
-├── incoming/     ← Workato monitors — new CSV files trigger pipeline
-├── processed/    ← Successfully processed files archived here (_processed.csv)
-└── failed/       ← Partially failed files archived here (_partial.csv)
+
+| Folder | Purpose |
+|---|---|
+| `incoming/` | Workato monitors this folder — new CSV files trigger the pipeline automatically |
+| `processed/` | Successfully processed files archived here with `_processed` suffix |
+| `failed/` | Partially failed files archived here with `_partial` suffix |
+
+**Bucket name:** `orderflow-pipeline`  
+**Region:** ap-southeast-2 (Sydney)  
+**IAM Policy:** `OrderFlow-S3-LeastPrivilege` — least privilege access for Workato
 
 ## Database Schema
 ### orders
