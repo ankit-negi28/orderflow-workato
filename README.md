@@ -34,7 +34,7 @@ OrderFlow automates the complete order ingestion pipeline — validating, transf
 ## Live Demo
 | File | Description |
 |---|---|
-| [orders_batch_001.csv](sample-files/orders_batch_002.csv) | Sample file with intentional errors (validation failures + duplicate) |
+| [orders_batch_001.csv](sample-files/orders_batch_001.csv) | Sample file with intentional errors (validation failures + duplicate) |
 | [orders_batch_clean_001.csv](sample-files/orders_batch_clean_001.csv) | Clean file with all valid orders |
 
 ## Architecture
